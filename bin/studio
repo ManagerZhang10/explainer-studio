@@ -1,0 +1,50 @@
+#!/bin/sh
+# explainer-studio 统一入口。把本文件软链进 PATH（如 ~/.local/bin/studio）即可在任何目录调用。
+set -eu
+self="$0"; while [ -L "$self" ]; do d=$(dirname "$self"); self=$(readlink "$self"); case "$self" in /*) ;; *) self="$d/$self" ;; esac; done
+repo=$(cd "$(dirname "$self")/.." && pwd)
+py="${STUDIO_PYTHON:-python3}"
+area="${1:---help}"; [ "$#" -gt 0 ] && shift
+
+avatar_help() { cat <<'H'
+studio avatar <命令>     竖屏口播讲解（本人小窗 + 逐帧信息图）。除 init 外都在专题目录里跑
+  init <目录>        新建专题骨架（topic.json / script / scenes.js / 示意图）
+  clone              从录音截样本克隆声音（已有结果不重复花钱）
+  voice [语速]       配音 + 转写 + 逐字对齐（= tts + transcribe + align）
+  driver             按配音时长截口型驱动底片
+  lipsync            HeyGen 对口型（约 0.1 美元/秒，放后台跑）
+  prep [视频]        抽帧 + 人脸跟踪 + 字幕分块 -> work/data.json
+  bgm [bright|dark]  按时间轴生成配乐
+  stills 3.0 9.5 …   出静帧检查（--theme dark）
+  build              渲染 + 混音 + 合成 -> out/
+  qc <mp4> <tag>     Gemini 看片打分
+  sheet out.jpg 列数 宽 图…   静帧联系表
+H
+}
+
+case "$area" in
+  setup) exec "$py" "$repo/studio/setup.py" "$@" ;;
+  avatar)
+    cmd="${1:-help}"; [ "$#" -gt 0 ] && shift
+    t="$repo/studio/avatar/tools"
+    case "$cmd" in
+      init|clone|tts|transcribe|align|driver|lipsync|prep|bgm|mix|build|qc|sheet) exec "$py" "$t/$cmd.py" "$@" ;;
+      stills) exec "$py" "$t/render.py" stills "$@" ;;
+      render) exec "$py" "$t/render.py" video "$@" ;;
+      voice) "$py" "$t/tts.py" "$@" && "$py" "$t/transcribe.py" && exec "$py" "$t/align.py" ;;
+      *) avatar_help ;;
+    esac ;;
+  lecture) exec "$py" "$repo/studio/lecture/cli.py" "$@" ;;
+  cut) exec "$py" "$repo/studio/cut/lecture_cut.py" "$@" ;;
+  refs) exec "$py" "$repo/studio/refs/cli.py" "$@" ;;
+  *)
+    cat <<'H'
+studio <模块> <命令>     中文技术讲解视频工具箱
+  setup                    下载字体、检查依赖与配置
+  avatar …                 竖屏口播：克隆声音 + 对口型小窗 + 逐帧信息图（studio avatar help）
+  lecture …                横屏讲义：讲义 -> 口播稿 -> 大字简图动画 -> 成片（studio lecture --help）
+  cut …                    录屏剪辑：去气口、删卡壳、逐字字幕、圆形摄像头（studio cut --help）
+  refs …                   参考视频：抓取博主视频、转写、拆解制作手法（studio refs --help）
+H
+    ;;
+esac

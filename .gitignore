@@ -1,0 +1,16 @@
+# 产物与中间文件一律不进仓库：成片、素材、缓存都放在工作区（config.toml 的 paths.workspace）
+__pycache__/
+*.pyc
+.DS_Store
+work/
+out/
+*.mp4
+*.mov
+*.m4a
+*.mp3
+*.wav
+# 字体由 `studio setup` 下载到缓存目录
+studio/avatar/fonts/
+# 本机配置与密钥
+config.toml
+.env

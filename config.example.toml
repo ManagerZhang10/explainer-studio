@@ -1,0 +1,30 @@
+# 复制到 ~/.config/explainer-studio/config.toml 后按本机情况改。这个文件不进仓库。
+
+[paths]
+# 工作区：参考视频、成片项目、个人素材都放这里（不进仓库）
+workspace = "~/explainer-studio-workspace"
+
+[secrets]
+# 密钥文件（KEY=VALUE 每行一个）。口播要 FAL_KEY；看片质检和参考视频拆解要 GEMINI_API_KEY、GEMINI_BASE_URL（可选 GEMINI_MODEL）；
+# 参考视频转写要 OPENAI_API_KEY；横屏讲义写稿要 DEEPSEEK_API_KEY、DEEPSEEK_BASE_URL、DEEPSEEK_V4_PRO_MODEL
+env_file = "~/.config/explainer-studio/.env"
+
+[tools]
+ffmpeg = ""                 # 留空则用 PATH 里的 ffmpeg
+mlx_whisper = "mlx_whisper"
+
+[me]
+# 新建口播专题时自动填进 topic.json 的默认值
+camera_video = ""           # 本人口播录像（做对口型驱动底片）
+camera_mic = ""             # 同一段录像的麦克风音轨（克隆声音、给驱动混音轨）
+camera_start = 0            # 驱动底片从第几秒开始截：挑人在正常说话、手不挡嘴的一段
+camera_grade = "null"       # ffmpeg 调色滤镜，例如 "eq=contrast=1.06:saturation=1.06"
+voice_sample_start = 0      # 克隆声音的样本起点（秒），截 90 秒干净口播
+voice_clone_result = ""     # 已克隆好的声音（clone 命令的输出 JSON），复用免重复花钱
+demo_image = ""             # 示意图统一用的 demo 图（不要用本人头像）
+
+[lecture]
+# 横屏讲义模式：课程讲义 / 幻灯片目录和出片项目目录
+course_docs = ""
+course_slides = ""
+project = ""

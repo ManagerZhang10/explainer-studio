@@ -1,0 +1,21 @@
+{
+ "out_name": "拆解H3_视频生成的五个零件",
+ "theme": "light",
+ "camera_open": "card",
+ "camera_open_until": "hook",
+ "tail": 1.8,
+ "camera": {
+  "video": "<你的口播录像.mov>",
+  "mic": "<同一段录像的麦克风音轨.m4a>",
+  "start": 360,
+  "grade": "eq=contrast=1.06:saturation=1.06:gamma=1.03,colorbalance=rs=0.03:bs=-0.02"
+ },
+ "voice": {
+  "speed": 1.12,
+  "sample_start": 970,
+  "sample_len": 90
+ },
+ "bgm": {
+  "style": "bright"
+ }
+}

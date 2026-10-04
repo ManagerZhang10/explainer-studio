@@ -1,0 +1,22 @@
+{
+ "out_name": "minimal",
+ "theme": "light",
+ "camera_open": "card",
+ "camera_open_until": "hook",
+ "tail": 1.8,
+ "camera": {
+  "video": "",
+  "mic": "",
+  "start": 0,
+  "grade": "null"
+ },
+ "voice": {
+  "speed": 1.12,
+  "sample_start": 0,
+  "sample_len": 90,
+  "clone_result": "work/voice/clone_result.json"
+ },
+ "bgm": {
+  "style": "bright"
+ }
+}
