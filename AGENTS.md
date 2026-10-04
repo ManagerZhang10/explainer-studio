@@ -32,7 +32,6 @@ Git 身份只用个人 noreply 邮箱，仓库级配置，不加 `--global`。
 | 改了什么 | 至少跑 |
 | --- | --- |
 | `studio/avatar/` | 在一个已有专题目录 `studio avatar stills <秒…>`，看静帧 |
-| `studio/lecture/` | `cd studio/lecture && python3 -c "import build_video, gen_script, run_batch"` |
 | `studio/refs/` | `studio refs report` |
 | `studio/common/config.py` | `studio setup` |
 

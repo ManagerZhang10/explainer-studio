@@ -9,7 +9,6 @@
 | 模块 | 命令 | 产出 |
 | --- | --- | --- |
 | 竖屏口播 | `studio avatar …` | 1080×1920 讲解片：克隆声音配音、本人小窗对口型、逐句挂词的 Canvas 信息图、配乐和音效 |
-| 横屏讲义 | `studio lecture …` | 1280×720 讲义视频：讲义 → 口播稿 → 大字简图逐步动画 → 成片 |
 | 录屏剪辑 | `studio cut …` | 录屏讲课（屏幕 / 摄像头 / 麦克风三轨）去气口、删卡壳、逐字字幕、圆形摄像头 |
 | 参考视频 | `studio refs …` | 抓博主视频、转写、切镜、算语速和切镜频率、让 Gemini 拆开场钩子和画面层 |
 
@@ -38,7 +37,6 @@ studio setup                                                     # 下载开源�
 | `FAL_KEY` | 声音克隆与配音（MiniMax）、对口型（HeyGen）、配乐（ElevenLabs），都走 fal |
 | `GEMINI_API_KEY` / `GEMINI_BASE_URL` / `GEMINI_MODEL` | 看片质检、参考视频拆解 |
 | `OPENAI_API_KEY`（可选 `OPENAI_BASE_URL`） | 参考视频转写 |
-| `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DEEPSEEK_V4_PRO_MODEL` | 横屏讲义生成口播稿 |
 
 ## 目录：代码在仓库，素材在工作区
 
@@ -47,7 +45,6 @@ explainer-studio/                 ← 本仓库，只有代码、模板和 skill
 ├── bin/studio                    统一入口
 ├── studio/
 │   ├── avatar/                   竖屏口播：tools/*.py + engine/（Canvas 渲染引擎）
-│   ├── lecture/                  横屏讲义
 │   ├── cut/                      录屏剪辑
 │   ├── refs/                     参考视频库
 │   └── common/                   配置、密钥、fal 调用
@@ -93,7 +90,6 @@ studio refs report                # 按分组看语速、切镜频率、字幕�
 | skill | 什么时候用 |
 | --- | --- |
 | [avatar-explainer-video](skills/avatar-explainer-video/SKILL.md) | 做竖屏口播讲解（本人小窗 + 信息图） |
-| [kexue-video](skills/kexue-video/SKILL.md) | 讲义一个知识点做成横屏讲解视频 |
 | [lecture-video-cut](skills/lecture-video-cut/SKILL.md) | 剪录屏讲课 |
 | [reference-study](skills/reference-study/SKILL.md) | 拆别的博主的视频 |
 

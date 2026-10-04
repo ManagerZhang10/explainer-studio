@@ -18,7 +18,6 @@ DEFAULTS = {
     'secrets': {'env_file': '~/.config/explainer-studio/.env'},
     'tools': {'ffmpeg': '', 'mlx_whisper': 'mlx_whisper'},
     'me': {},        # 本人素材：camera_video / camera_mic / camera_start / voice_clone_result / demo_image
-    'lecture': {},   # 横屏讲义：course_docs / course_slides / project
 }
 
 _cfg = None
