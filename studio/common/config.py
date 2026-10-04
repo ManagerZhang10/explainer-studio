@@ -19,7 +19,8 @@ DEFAULTS = {
     'tools': {'ffmpeg': '', 'mlx_whisper': 'mlx_whisper'},
     # 各环节用哪家服务。fal/gemini/openai = 海外；bailian = 阿里云百炼（国内直连，一把 DASHSCOPE_API_KEY 全包）
     'providers': {'voice': 'fal', 'lipsync': 'fal', 'vision': 'gemini', 'asr': 'openai', 'music': 'fal',
-                  'bailian_vision_model': 'qwen3-vl-plus', 'bailian_omni_model': 'qwen3.5-omni-plus'},
+                  'bailian_vision_model': 'qwen3-vl-plus', 'bailian_omni_model': 'qwen3.5-omni-plus',
+                  'bailian_qwen_tts_model': 'qwen-audio-3.0-tts-plus', 'bailian_cosyvoice_model': 'cosyvoice-v3.5-plus'},
     'me': {},        # 本人素材：camera_video / camera_mic / camera_start / voice_clone_result / demo_image
 }
 

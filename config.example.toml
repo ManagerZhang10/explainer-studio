@@ -12,21 +12,26 @@ env_file = "~/.config/explainer-studio/.env"
 
 [providers]
 # 每个环节用哪家服务。国内用户推荐全选百炼：一把 DASHSCOPE_API_KEY，国内直连，人民币付费。
-# 百炼上的 MiniMax 配音要先在控制台开通：https://bailian.console.aliyun.com/ → 模型广场 → 搜 speech-2.8-hd → 开通。
 #
 #            国内（百炼）      海外
-# voice   = "bailian"        "fal"      克隆声音 + 配音，两边都是 MiniMax speech-2.8-hd
+# voice   = "cosyvoice"      "fal"      克隆声音 + 配音，四选一（并排听过，音色都像）：
+#                                         fal       MiniMax speech-2.8-hd，克隆约 1.5 美元一次
+#                                         bailian   同一个 MiniMax，在百炼：克隆 9.9 元一次，合成 3.5 元/万字；要先在控制台开通 speech-2.8-hd
+#                                         qwen      千问 Qwen-Audio-3.0-TTS：克隆免费，不用开通
+#                                         cosyvoice CosyVoice v3.5：克隆免费、合成 1.5 元/万字，不用开通
 # lipsync = "bailian"        "fal"      对口型：百炼 VideoRetalk 0.08 元/秒；fal = HeyGen 约 0.1 美元/秒，画质最好
 # vision  = "bailian"        "gemini"   看片质检、参考视频拆解：百炼用千问视觉 / 全模态模型
 # asr     = "bailian"        "openai"   参考视频转写：百炼 Fun-ASR；也可以填 "local"（本机 mlx-whisper，免费）
 # music   = "none"           "fal"      配乐：百炼没有，填 none 后在 topic.json 的 bgm.file 放自己的曲子；fal = ElevenLabs
-voice = "bailian"
+voice = "cosyvoice"
 lipsync = "bailian"
 vision = "bailian"
 asr = "bailian"
 music = "none"
 # bailian_vision_model = "qwen3-vl-plus"       # 看图（参考视频拆解）
 # bailian_omni_model = "qwen3.5-omni-plus"     # 连看带听（成片质检）
+# bailian_qwen_tts_model = "qwen-audio-3.0-tts-plus"   # voice = qwen 时用的模型（flash 档更便宜）
+# bailian_cosyvoice_model = "cosyvoice-v3.5-plus"      # voice = cosyvoice 时用的模型（flash 档更便宜）
 
 [tools]
 ffmpeg = ""                 # 留空则用 PATH 里的 ffmpeg
@@ -40,5 +45,5 @@ camera_start = 0            # 驱动底片从第几秒开始截：挑人在正�
 camera_grade = "null"       # ffmpeg 调色滤镜，例如 "eq=contrast=1.06:saturation=1.06"
 voice_sample_start = 0      # 克隆声音的样本起点（秒），截 90 秒干净口播
 voice_clone_result = ""     # 已克隆好的声音（fal 上 clone 的输出 JSON），复用免重复花钱
-voice_clone_result_bailian = ""   # 同上，百炼上克隆的（两家的声音不通用）
+# voice_clone_result_bailian / _qwen / _cosyvoice = ""   # 其他几家克隆好的声音（各家不通用）
 demo_image = ""             # 示意图统一用的 demo 图（不要用本人头像）

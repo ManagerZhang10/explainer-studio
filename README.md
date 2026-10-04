@@ -38,7 +38,7 @@ studio setup                                                     # 下载开源�
 
 | 环节 | 国内（推荐） | 海外 |
 | --- | --- | --- |
-| 克隆声音 + 配音 | 百炼上的 MiniMax speech-2.8-hd：克隆 9.9 元/次，配音 3.5 元/万字 | fal 上的同一个 MiniMax |
+| 克隆声音 + 配音 | 三选一，都在百炼：CosyVoice v3.5（克隆免费，1.5 元/万字）、千问 Qwen-Audio-3.0-TTS（克隆免费）、MiniMax speech-2.8-hd（克隆 9.9 元/次，3.5 元/万字，要先开通） | fal 上的 MiniMax speech-2.8-hd |
 | 对口型 | 百炼 VideoRetalk：0.08 元/秒 | fal 上的 HeyGen：约 0.1 美元/秒，**画质最好** |
 | 看片质检、参考视频拆解 | 百炼千问（视觉 / 全模态） | Gemini |
 | 参考视频转写 | 百炼 Fun-ASR，或本机 mlx-whisper（免费） | OpenAI whisper |
@@ -46,9 +46,9 @@ studio setup                                                     # 下载开源�
 | 要的密钥 | 只要 `DASHSCOPE_API_KEY`（阿里云百炼，北京地域） | `FAL_KEY`、`GEMINI_API_KEY` + `GEMINI_BASE_URL`、`OPENAI_API_KEY` |
 
 国内这套直连、人民币付费，2 分钟一条约 10 元；海外这套约 15–20 美元，大头是对口型。
-我们并排比过同一段底片：HeyGen 的嘴型最自然；百炼 VideoRetalk 嘴型偏夸张，但便宜、国内能直接用。
+我们并排比过：对口型 HeyGen 的嘴型最自然，百炼 VideoRetalk 偏夸张但便宜、国内能直接用；配音三家克隆出来音色都像，作者自己用 MiniMax。
 
-百炼上的 MiniMax 配音要先开通：[百炼控制台](https://bailian.console.aliyun.com/) → 模型广场 → 搜 `speech-2.8-hd` → 开通。
+百炼上只有 MiniMax 配音要先开通（[百炼控制台](https://bailian.console.aliyun.com/) → 模型广场 → 搜 `speech-2.8-hd` → 开通）；CosyVoice 和千问配音、对口型、质检、转写拿到 key 就能用。
 
 ## 做数字人口播要准备什么
 

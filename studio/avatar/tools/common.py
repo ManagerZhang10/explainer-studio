@@ -51,3 +51,18 @@ def resolve(p):
     """topic.json 里的路径：相对路径按专题目录解析，~ 展开。"""
     p = Path(str(p)).expanduser()
     return p if p.is_absolute() else TOPIC / p
+
+
+# 配音服务：fal / bailian 都是 MiniMax speech-2.8-hd；qwen = 千问 Qwen-Audio-3.0-TTS；cosyvoice = CosyVoice v3.5（后三个都走百炼）
+VOICES = {'fal': 'MiniMax（fal）', 'bailian': 'MiniMax（百炼）', 'qwen': '千问 Qwen-Audio-3.0-TTS（百炼）', 'cosyvoice': 'CosyVoice v3.5（百炼）'}
+
+
+def clone_slot(prov):
+    """各家的克隆声音互不通用，分开存：topic.json 里的键名和默认文件。fal 沿用老名字。"""
+    if prov == 'fal':
+        return 'clone_result', 'work/voice/clone_result.json'
+    return f'clone_result_{prov}', f'work/voice/clone_result_{prov}.json'
+
+
+def bailian_tts_model(prov):
+    return config.get('providers', {'qwen': 'bailian_qwen_tts_model', 'cosyvoice': 'bailian_cosyvoice_model'}[prov])

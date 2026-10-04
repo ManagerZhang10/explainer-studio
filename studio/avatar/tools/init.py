@@ -22,7 +22,8 @@ topic = {'out_name': d.name, 'theme': 'light', 'camera_open': 'card', 'camera_op
                     'grade': me.get('camera_grade', 'null')},
          'voice': {'speed': me.get('voice_speed', 1.12), 'sample_start': me.get('voice_sample_start', 0), 'sample_len': 90,
                    'clone_result': me.get('voice_clone_result', 'work/voice/clone_result.json'),
-                   'clone_result_bailian': me.get('voice_clone_result_bailian', 'work/voice/clone_result_bailian.json')},
+                   # 各家克隆好的声音：config [me] 里 voice_clone_result_<家>（bailian / qwen / cosyvoice）
+                   **{k.replace('voice_', '', 1): me[k] for k in me if k.startswith('voice_clone_result_')}},
          'bgm': {'style': 'bright'}}
 json.dump(topic, open(d / 'topic.json', 'w'), ensure_ascii=False, indent=1)
 json.dump({'title': '', 'source': '', 'lines': [

@@ -47,7 +47,7 @@ def check():
     s = config.secrets()
     need = {}  # 密钥 -> 用到它的环节
     NAMES = {'voice': '配音', 'lipsync': '对口型', 'vision': '看片质检/拆解', 'asr': '参考视频转写', 'music': '配乐'}
-    KEYS = {'bailian': ['DASHSCOPE_API_KEY'], 'fal': ['FAL_KEY'], 'gemini': ['GEMINI_API_KEY', 'GEMINI_BASE_URL'], 'openai': ['OPENAI_API_KEY']}
+    KEYS = {'bailian': ['DASHSCOPE_API_KEY'], 'qwen': ['DASHSCOPE_API_KEY'], 'cosyvoice': ['DASHSCOPE_API_KEY'], 'fal': ['FAL_KEY'], 'gemini': ['GEMINI_API_KEY', 'GEMINI_BASE_URL'], 'openai': ['OPENAI_API_KEY']}
     for kind, name in NAMES.items():
         p = config.provider(kind)
         print(f'  · {name}：{p}')
