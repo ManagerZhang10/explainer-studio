@@ -21,7 +21,8 @@ topic = {'out_name': d.name, 'theme': 'light', 'camera_open': 'card', 'camera_op
          'camera': {'video': me.get('camera_video', ''), 'mic': me.get('camera_mic', ''), 'start': me.get('camera_start', 0),
                     'grade': me.get('camera_grade', 'null')},
          'voice': {'speed': me.get('voice_speed', 1.12), 'sample_start': me.get('voice_sample_start', 0), 'sample_len': 90,
-                   'clone_result': me.get('voice_clone_result', 'work/voice/clone_result.json')},
+                   'clone_result': me.get('voice_clone_result', 'work/voice/clone_result.json'),
+                   'clone_result_bailian': me.get('voice_clone_result_bailian', 'work/voice/clone_result_bailian.json')},
          'bgm': {'style': 'bright'}}
 json.dump(topic, open(d / 'topic.json', 'w'), ensure_ascii=False, indent=1)
 json.dump({'title': '', 'source': '', 'lines': [
@@ -38,6 +39,6 @@ else:  # 没配示意图就画一张渐变占位图
     im.putdata([(80 + x // 3, 120 + y // 4, 200 - x // 4) for y in range(320) for x in range(360)])
     im.save(d / 'assets/demo.png')
 print('created', d)
-missing = [k for k in ('camera_video', 'camera_mic', 'voice_clone_result') if not me.get(k)]
+missing = [k for k in ('camera_video', 'camera_mic') if not me.get(k)]
 if missing:
     print('topic.json 里还要手填：', '、'.join(missing), '（或写进 config.toml 的 [me] 段，以后新建自动带上）')

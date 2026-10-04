@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 竖屏口播 | `studio avatar …` | 1080×1920 讲解片：克隆声音配音、本人小窗对口型、逐句挂词的 Canvas 信息图、配乐和音效 |
 | 录屏剪辑 | `studio cut …` | 录屏讲课（屏幕 / 摄像头 / 麦克风三轨）去气口、删卡壳、逐字字幕、圆形摄像头 |
-| 参考视频 | `studio refs …` | 抓博主视频、转写、切镜、算语速和切镜频率、让 Gemini 拆开场钩子和画面层 |
+| 参考视频 | `studio refs …` | 抓博主视频、转写、切镜、算语速和切镜频率、让视觉模型拆开场钩子和画面层 |
 
 每个模块配一个 skill（`skills/`），告诉 Agent 什么时候用、怎么判断好坏；真正干活的都在 `studio/` 的脚本里，裸终端也能直接跑。
 
@@ -21,7 +21,7 @@
 ```bash
 git clone https://github.com/ManagerZhang10/explainer-studio.git
 cd explainer-studio
-pip install playwright numpy pillow "opencv-python-headless<5" mlx-whisper certifi edge-tts
+pip install playwright numpy pillow "opencv-python-headless<5" mlx-whisper certifi
 playwright install chromium
 ln -s "$PWD/bin/studio" ~/.local/bin/studio        # 任意目录可调用
 
@@ -30,13 +30,34 @@ cp config.example.toml ~/.config/explainer-studio/config.toml   # 改工作区�
 studio setup                                                     # 下载开源字体，检查依赖和密钥
 ```
 
-密钥写在 config 指定的 env 文件里（`KEY=VALUE` 一行一个），代码只在内存里读，不落盘、不打印：
+国内装不动时：pip 加 `-i https://pypi.tuna.tsinghua.edu.cn/simple`；Chromium 设 `PLAYWRIGHT_DOWNLOAD_HOST=https://registry.npmmirror.com/-/binary/playwright` 再装。
 
-| 变量 | 用途 |
+## 选服务：国内一把百炼 key，或海外几家
+
+每个环节用哪家在 `config.toml` 的 `[providers]` 里选，密钥写在 config 指定的 env 文件里（`KEY=VALUE` 一行一个），代码只在内存里读，不落盘、不打印。
+
+| 环节 | 国内（推荐） | 海外 |
+| --- | --- | --- |
+| 克隆声音 + 配音 | 百炼上的 MiniMax speech-2.8-hd：克隆 9.9 元/次，配音 3.5 元/万字 | fal 上的同一个 MiniMax |
+| 对口型 | 百炼 VideoRetalk：0.08 元/秒 | fal 上的 HeyGen：约 0.1 美元/秒，**画质最好** |
+| 看片质检、参考视频拆解 | 百炼千问（视觉 / 全模态） | Gemini |
+| 参考视频转写 | 百炼 Fun-ASR，或本机 mlx-whisper（免费） | OpenAI whisper |
+| 配乐 | 百炼没有：用自己的免版税曲子（`topic.json` 的 `bgm.file`），或不配乐 | fal 上的 ElevenLabs |
+| 要的密钥 | 只要 `DASHSCOPE_API_KEY`（阿里云百炼，北京地域） | `FAL_KEY`、`GEMINI_API_KEY` + `GEMINI_BASE_URL`、`OPENAI_API_KEY` |
+
+国内这套直连、人民币付费，2 分钟一条约 10 元；海外这套约 15–20 美元，大头是对口型。
+我们并排比过同一段底片：HeyGen 的嘴型最自然；百炼 VideoRetalk 嘴型偏夸张，但便宜、国内能直接用。
+
+百炼上的 MiniMax 配音要先开通：[百炼控制台](https://bailian.console.aliyun.com/) → 模型广场 → 搜 `speech-2.8-hd` → 开通。
+
+## 做数字人口播要准备什么
+
+| 物料 | 要求 |
 | --- | --- |
-| `FAL_KEY` | 声音克隆与配音（MiniMax）、对口型（HeyGen）、配乐（ElevenLabs），都走 fal |
-| `GEMINI_API_KEY` / `GEMINI_BASE_URL` / `GEMINI_MODEL` | 看片质检、参考视频拆解 |
-| `OPENAI_API_KEY`（可选 `OPENAI_BASE_URL`） | 参考视频转写 |
+| 一段本人口播录像 | 正常说话、正面、光线稳定，坐远一点露出肩膀和胸口，手不挡嘴。比成片长就行，对口型只改嘴，眨眼和动作都是真的 |
+| 同一段录像的音轨 | 单独的麦克风文件或录像自带声音都行；截其中 90 秒干净口播用来克隆声音（只克隆一次） |
+| 一张示意图 | 画面里表示「一张图」时用，不要用本人头像；不配就自动生成占位图 |
+| 讲稿 | 一篇图文稿，改成逐句的 `script.json`；画面 `scenes.js` 照 `examples/h3-five-parts` 写，建议交给 Claude Code / Codex |
 
 ## 目录：代码在仓库，素材在工作区
 
@@ -47,7 +68,7 @@ explainer-studio/                 ← 本仓库，只有代码、模板和 skill
 │   ├── avatar/                   竖屏口播：tools/*.py + engine/（Canvas 渲染引擎）
 │   ├── cut/                      录屏剪辑
 │   ├── refs/                     参考视频库
-│   └── common/                   配置、密钥、fal 调用
+│   └── common/                   配置、密钥、fal / 百炼 / 视觉模型调用
 ├── skills/                       给 Agent 的判断规则（软链到 ~/.claude/skills、~/.codex/skills）
 ├── examples/                     专题示例
 └── config.example.toml
@@ -99,8 +120,8 @@ for s in skills/*/; do ln -s "$PWD/$s" ~/.claude/skills/; ln -s "$PWD/$s" ~/.cod
 
 ## 费用参考
 
-2 分钟竖屏口播一条约 15–20 美元：对口型 HeyGen 约 0.1 美元/秒是大头，配音和配乐各几美元。
-`studio avatar clone` 只在第一次克隆声音时花钱，结果写进 config 的 `[me] voice_clone_result` 复用。
+2 分钟竖屏口播一条：全走百炼约 10 元；走海外约 15–20 美元，大头是 HeyGen 对口型（约 0.1 美元/秒）。
+`studio avatar clone` 只在第一次克隆声音时花钱，结果写进 config 的 `[me] voice_clone_result`（百炼的写 `voice_clone_result_bailian`）复用。
 
 ## 许可
 

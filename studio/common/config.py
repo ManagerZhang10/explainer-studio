@@ -17,6 +17,9 @@ DEFAULTS = {
     'paths': {'workspace': '~/explainer-studio-workspace'},
     'secrets': {'env_file': '~/.config/explainer-studio/.env'},
     'tools': {'ffmpeg': '', 'mlx_whisper': 'mlx_whisper'},
+    # 各环节用哪家服务。fal/gemini/openai = 海外；bailian = 阿里云百炼（国内直连，一把 DASHSCOPE_API_KEY 全包）
+    'providers': {'voice': 'fal', 'lipsync': 'fal', 'vision': 'gemini', 'asr': 'openai', 'music': 'fal',
+                  'bailian_vision_model': 'qwen3-vl-plus', 'bailian_omni_model': 'qwen3.5-omni-plus'},
     'me': {},        # 本人素材：camera_video / camera_mic / camera_start / voice_clone_result / demo_image
 }
 
@@ -70,11 +73,18 @@ def secrets():
     return out
 
 
-def secret(name):
-    v = secrets().get(name)
-    if not v:
-        sys.exit(f'缺少密钥 {name}：写进 {get("secrets", "env_file")}（或设成环境变量）')
-    return v
+def secret(name, *aliases):
+    """取密钥；aliases 是同一把钥匙的别名（例如百炼的 key 有人存成 QWEN_API_KEY）。"""
+    s = secrets()
+    for k in (name, *aliases):
+        if s.get(k):
+            return s[k]
+    sys.exit(f'缺少密钥 {name}：写进 {get("secrets", "env_file")}（或设成环境变量）')
+
+
+def provider(kind):
+    """某个环节用哪家：voice / lipsync / vision / asr / music。"""
+    return get('providers', kind)
 
 
 def ca_file():

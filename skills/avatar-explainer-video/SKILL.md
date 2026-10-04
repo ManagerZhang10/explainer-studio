@@ -1,6 +1,6 @@
 ---
 name: avatar-explainer-video
-description: 把一篇技术图文（如小红书拆解帖及其配图）做成本人出镜的竖屏口播讲解短视频：克隆本人声音配音、HeyGen 对口型、右下角圆形摄像头小窗、代码逐帧渲染的信息图动效（动效踩在口播的词上）、卡拉 OK 字幕、配乐和音效。用于「把这篇做成视频」「做个数字人口播」「出一条竖屏讲解短视频」「改一下那条口播视频」。
+description: 把一篇技术图文（如小红书拆解帖及其配图）做成本人出镜的竖屏口播讲解短视频：克隆本人声音配音、对口型（HeyGen 或百炼）、右下角圆形摄像头小窗、代码逐帧渲染的信息图动效（动效踩在口播的词上）、卡拉 OK 字幕、配乐和音效。用于「把这篇做成视频」「做个数字人口播」「出一条竖屏讲解短视频」「改一下那条口播视频」。
 ---
 
 # 口播讲解竖屏视频
@@ -34,10 +34,19 @@ description: 把一篇技术图文（如小红书拆解帖及其配图）做成�
    - 对口型还没回来时，先 `studio avatar prep work/lipsync/driver.mp4` 用驱动底片抽帧，`studio avatar stills 3.0 9.5 …` 出静帧检查版式，再 `studio avatar sheet` 拼成联系表看。
 6. **配乐**：`studio avatar bgm`（约 3 美元，按时间轴分开场、讲解、收尾三段）。
 7. **出片**：对口型回来后 `studio avatar prep`，再 `studio avatar build`，产出 `out/<out_name>.mp4`。
-8. **质检**：`studio avatar qc out/x.mp4 r1`，交给 Gemini 看片。
-   - Gemini 看的是 270×480 的压缩片，「字幕挡住画面」「字太小」常是误判。先在静帧上核实再改。
+8. **质检**：`studio avatar qc out/x.mp4 r1`，交给视觉模型连看带听（Gemini，或百炼千问全模态）。
+   - 模型看的是 270×480 的压缩片，「字幕挡住画面」「字太小」常是误判。先在静帧上核实再改。
    - 改完重新 build，再抽静帧确认。
 9. **交付**：给成片绝对路径和一条 `open` 命令，说明花费和已知限制。长任务做完主动通知用户。
+
+## 服务选哪家
+
+`config.toml` 的 `[providers]` 决定每个环节走哪家，`studio setup` 会列出当前选择和缺的密钥。
+
+- 国内用户全选 `bailian`：一把 `DASHSCOPE_API_KEY`，配音、对口型、质检都在百炼；配乐填 `none`，在 `topic.json` 写 `bgm.file` 用自己的曲子。
+- 对口型画质 HeyGen（`fal`）最好；百炼 VideoRetalk 嘴型偏夸张，但便宜十倍，单段最长 120 秒，`lipsync` 会自动切段再拼。
+- 克隆的声音两家不通用：百炼的克隆结果存 `clone_result_bailian.json`，切换 `providers.voice` 后要重新 `clone`。
+- 百炼报「product is not activated」：去百炼控制台模型广场开通对应模型（MiniMax 配音要单独开通）。
 
 ## 已知会出错的地方
 

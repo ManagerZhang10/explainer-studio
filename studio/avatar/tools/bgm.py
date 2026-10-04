@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 """按配音时间轴生成背景音乐（ElevenLabs Music v2.5，经 fal）-> work/bgm/bgm.mp3。
 分段：开场（第一句）轻起 -> 讲解段稳定律动、给人声留空间 -> 最后一句收尾。风格取 topic.json 的 bgm.style（bright / dark）。
-注意：composition_plan 不能和 force_instrumental 一起用，靠 negative_styles 去人声。"""
-import json, sys
-from common import cfg, mkdir, TOPIC
-from studio.common import fal
+注意：composition_plan 不能和 force_instrumental 一起用，靠 negative_styles 去人声。
+不用 AI 配乐时（config 的 providers.music = "none"，或 topic.json 写了 bgm.file）：用自己的曲子，按片长循环截好；都没有就不配乐。"""
+import json, subprocess, sys
+from common import cfg, mkdir, TOPIC, FF, resolve
+from studio.common import config
 c = cfg(); mkdir('work/bgm')
+own = c.get('bgm', {}).get('file')
+if own or config.provider('music') == 'none':
+    if not own:
+        sys.exit('providers.music = none：在 topic.json 的 bgm.file 写一首自己的曲子（免版税），或者不配乐直接 build')
+    tl = json.load(open(TOPIC / 'work/timeline.json'))
+    end = tl['duration'] + c.get('tail', 1.6) + 1.5
+    subprocess.run([FF, '-hide_banner', '-loglevel', 'error', '-y', '-stream_loop', '-1', '-i', str(resolve(own)), '-t', f'{end:.2f}',
+                    '-af', f'afade=t=out:st={end - 2.5:.2f}:d=2.5', '-ar', '48000', '-ac', '2', '-b:a', '192k', str(TOPIC / 'work/bgm/bgm.mp3')], check=True)
+    sys.exit(print('saved work/bgm/bgm.mp3（自备曲子）'))
+from studio.common import fal
 tl = json.load(open(TOPIC / 'work/timeline.json'))
 lines = tl['lines']
 STYLES = {

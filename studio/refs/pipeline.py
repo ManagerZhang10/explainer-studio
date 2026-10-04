@@ -1,13 +1,14 @@
-"""参考视频拆解流水线：转写 -> 切镜 -> 指标 -> Gemini 拆解 -> 汇总。
+"""参考视频拆解流水线：转写 -> 切镜 -> 指标 -> 视觉模型拆解 -> 汇总。
 每一步按 slug 落盘，已有结果直接跳过，可随时中断重跑。"""
 import json
 import re
 import statistics as st
 import subprocess
 import time
+import urllib.request
 
 from common import ASR, ANA, METRICS, SHEETS, SHOTS, duration, ff
-from gemini import call, img
+from studio.common import vision
 from openai_transcribe import transcribe
 
 CJK = re.compile(r'[一-鿿]')
@@ -30,29 +31,65 @@ def segments(slug):
             for s in json.load(open(p)).get('segments', []) if s.get('text', '').strip()]
 
 
-# ---------- 1. 转写 ----------
+# ---------- 1. 转写：providers.asr = openai（whisper API）| bailian（Fun-ASR）| local（本机 mlx-whisper，免费） ----------
+def _asr_openai(audio, model):
+    r = transcribe(str(audio), model)
+    return r.get('segments', []), r.get('language'), r.get('duration')
+
+
+def _asr_bailian(audio):
+    from studio.common import bailian
+    url = bailian.upload(audio, 'fun-asr')
+    t = bailian.call('services/audio/asr/transcription', {'model': 'fun-asr', 'input': {'file_urls': [url]},
+                     'parameters': {'language_hints': ['zh', 'en']}}, oss=True, async_=True)
+    try:
+        o = bailian.wait(t['output']['task_id'], poll=5, log=lambda m: None)
+    except RuntimeError as e:
+        if 'ASR_RESPONSE_HAVE_NO_WORDS' in str(e):  # 整段没人声（纯音乐）：如实记 0 句，别像 whisper 那样编字
+            return [], 'zh', None
+        raise
+    res = json.loads(urllib.request.urlopen(o['output']['results'][0]['transcription_url'], context=bailian.CTX, timeout=300).read())
+    tr = res['transcripts'][0]
+    segs = [{'start': x['begin_time'] / 1000, 'end': x['end_time'] / 1000, 'text': x['text']} for x in tr.get('sentences', [])]
+    return segs, 'zh', (res.get('properties') or {}).get('original_duration_in_milliseconds', 0) / 1000 or None
+
+
+def _asr_local(audio):
+    from studio.common import config
+    subprocess.run([config.get('tools', 'mlx_whisper', 'mlx_whisper'), str(audio), '--model', 'mlx-community/whisper-large-v3-turbo',
+                    '--language', 'zh', '--output-format', 'json', '--output-name', audio.stem, '--output-dir', str(audio.parent),
+                    '--initial-prompt', '以下是普通话的句子，使用简体中文。'], check=True, capture_output=True)
+    r = json.load(open(audio.with_suffix('.json')))
+    audio.with_suffix('.json').unlink()
+    return [{'start': x['start'], 'end': x['end'], 'text': x['text']} for x in r['segments']], 'zh', None
+
+
 def asr(j, model='whisper-1'):
+    from studio.common import config
     slug = j['slug']; out = ASR / f'{slug}.json'
     if out.exists():
         return 'skip'
     ASR.mkdir(parents=True, exist_ok=True)
-    audio = ASR / f'{slug}.m4a'  # 统一抽成 16k 单声道，避免超 25MB
+    prov = config.provider('asr')
+    # 统一抽成 16k 单声道：OpenAI 用 m4a（压到 25MB 内），Fun-ASR 认 mp3 不认这种 m4a，本机 whisper 用 wav
+    ext, codec = {'bailian': ('mp3', ['-c:a', 'libmp3lame', '-b:a', '48k']), 'local': ('wav', [])}.get(prov, ('m4a', ['-c:a', 'aac', '-b:a', '32k']))
+    audio = ASR / f'{slug}.{ext}'
     cmd = [ff(), '-hide_banner', '-loglevel', 'error', '-y', '-threads', '2', '-i', j['video']]
     if j.get('asr_sec'):
         cmd += ['-t', str(j['asr_sec'])]
-    subprocess.run(cmd + ['-vn', '-ac', '1', '-ar', '16000', '-c:a', 'aac', '-b:a', '32k', str(audio)], check=True)
+    subprocess.run(cmd + ['-vn', '-ac', '1', '-ar', '16000', *codec, str(audio)], check=True)
     try:
-        r = transcribe(str(audio), model)
+        segs, lang, dur = (_asr_bailian(audio) if prov == 'bailian' else _asr_local(audio) if prov == 'local'
+                           else _asr_openai(audio, model))
     finally:
         audio.unlink(missing_ok=True)
-    segs = r.get('segments', [])
-    json.dump({'model': model, 'language': r.get('language'), 'duration': r.get('duration'),
+    json.dump({'model': model if prov == 'openai' else prov, 'language': lang, 'duration': dur,
                'clip_sec': j.get('asr_sec') or None, 'n_segments': len(segs), 'segments': segs},
               open(out, 'w'), ensure_ascii=False)
     (ASR / f'{slug}.srt').write_text('\n\n'.join(f"{i + 1}\n{_ts(s['start'])} --> {_ts(s['end'])}\n{s['text'].strip()}"
                                                  for i, s in enumerate(segs)))
     (ASR / f'{slug}.txt').write_text('\n'.join(s['text'].strip() for s in segs))
-    time.sleep(2)
+    time.sleep(2 if prov == 'openai' else 0)
     return f'{len(segs)} 句'
 
 
@@ -124,7 +161,7 @@ def metrics(jobs):
     return rows
 
 
-# ---------- 4. Gemini 拆解 ----------
+# ---------- 4. 视觉模型拆解（Gemini 或千问，见 providers.vision） ----------
 def _mean_db(video, t0, d):
     r = subprocess.run([ff(), '-hide_banner', '-nostats', '-ss', str(t0), '-t', str(d), '-i', video, '-vn',
                         '-af', 'volumedetect', '-f', 'null', '-'], capture_output=True, text=True)
@@ -177,7 +214,7 @@ def analyze(j, m=None):
 {'硬指标：' + json.dumps(m, ensure_ascii=False) if m else ''}
 
 {SCHEMA}"""
-    raw = call([img(sheet(j)), {'text': ctx}])
+    raw = vision.ask_json(ctx, images=[sheet(j)])
     raw.update({'slug': j['slug'], 'author': j['author'], 'title': j['title'], 'date': j['date'],
                 'duration_ms': int(dur * 1000), 'audio_measured': aud})
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -186,7 +223,7 @@ def analyze(j, m=None):
 
 
 def normalize(raw, m, keep):
-    """Gemini 的语义字段 + 实测指标 -> 统一结构。原始输出存在 _raw，可随时用新指标重算（studio refs merge）。"""
+    """视觉模型给的语义字段 + 实测指标 -> 统一结构。原始输出存在 _raw，可随时用新指标重算（studio refs merge）。"""
     hook, ost, am = raw.get('hook') or {}, raw.get('on_screen_text') or {}, raw.get('audio_measured') or {}
     bgm = None
     if am.get('gap_mean_db') is not None and am.get('speech_mean_db') is not None:

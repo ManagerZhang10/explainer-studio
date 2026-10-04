@@ -45,8 +45,17 @@ def check():
         row(f'python: {mod}', importlib.util.find_spec(mod) is not None, hint)
     row('mlx_whisper（口播对齐用，Apple 芯片）', bool(shutil.which(config.get('tools', 'mlx_whisper', 'mlx_whisper'))), 'pip install mlx-whisper；非 Mac 可换别的 whisper，输出同格式 JSON')
     s = config.secrets()
-    for k, why in [('FAL_KEY', '配音、对口型、配乐'), ('GEMINI_API_KEY', '看片质检'), ('GEMINI_BASE_URL', '看片质检')]:
-        row(f'密钥 {k}（{why}）', bool(s.get(k)), f'写进 {config.get("secrets", "env_file")}')
+    need = {}  # 密钥 -> 用到它的环节
+    NAMES = {'voice': '配音', 'lipsync': '对口型', 'vision': '看片质检/拆解', 'asr': '参考视频转写', 'music': '配乐'}
+    KEYS = {'bailian': ['DASHSCOPE_API_KEY'], 'fal': ['FAL_KEY'], 'gemini': ['GEMINI_API_KEY', 'GEMINI_BASE_URL'], 'openai': ['OPENAI_API_KEY']}
+    for kind, name in NAMES.items():
+        p = config.provider(kind)
+        print(f'  · {name}：{p}')
+        for k in KEYS.get(p, []):
+            need.setdefault(k, []).append(name)
+    for k, why in need.items():
+        have = bool(s.get(k) or (k == 'DASHSCOPE_API_KEY' and s.get('QWEN_API_KEY')))
+        row(f'密钥 {k}（{"、".join(why)}）', have, f'写进 {config.get("secrets", "env_file")}')
     ws = config.workspace()
     row(f'工作区 {ws}', bool(ws and ws.exists()), '在 config.toml 的 [paths] workspace 指一个目录')
     return ok

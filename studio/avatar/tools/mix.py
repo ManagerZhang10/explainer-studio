@@ -92,7 +92,9 @@ def main(ver):
                         'highpass=f=70,equalizer=f=180:t=q:w=1:g=2.5,equalizer=f=3200:t=q:w=1.2:g=1.5,acompressor=threshold=-20dB:ratio=2.5:attack=8:release=120:makeup=2',
                         '-ar', str(SR), str(vp)], check=True)
     voice = decode(vp); vo = np.zeros(N); vo[:min(N, len(voice))] = voice[:N]
-    bgm = decode(ROOT / 'work/bgm/bgm.mp3', 2); bg = np.zeros((N, 2)); bg[:min(N, len(bgm))] = bgm[:N]
+    bg = np.zeros((N, 2))
+    if (ROOT / 'work/bgm/bgm.mp3').exists():  # 没有配乐就只混人声和音效
+        bgm = decode(ROOT / 'work/bgm/bgm.mp3', 2); bg[:min(N, len(bgm))] = bgm[:N]
     # 配音包络 -> BGM 自动避让
     hop = SR // 100
     rms = np.array([math.sqrt(float(np.mean(vo[i:i + hop] ** 2))) for i in range(0, N, hop)])
