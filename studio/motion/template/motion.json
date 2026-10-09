@@ -1,0 +1,10 @@
+{
+ "duration": 6,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "selector": "#stage",
+ "preview": [0.3, 0.8, 1.5, 3.2, 4.0, 5.5],
+ "bgm": {"file": "", "volume": 0.45, "fade_in": 0.2, "fade_out": 1.8},
+ "cues": []
+}

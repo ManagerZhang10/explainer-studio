@@ -11,6 +11,7 @@
 | 竖屏口播 | `studio avatar …` | 1080×1920 讲解片：克隆声音配音、本人小窗对口型、逐句挂词的 Canvas 信息图、配乐和音效 |
 | 录屏剪辑 | `studio cut …` | 录屏讲课（屏幕 / 摄像头 / 麦克风三轨）去气口、删卡壳、逐字字幕、圆形摄像头 |
 | 参考视频 | `studio refs …` | 抓博主视频、转写、切镜、算语速和切镜频率、让视觉模型拆开场钩子和画面层 |
+| 文字动效短片 | `studio motion …` | 无配音的宣传片 / 发布会风短片：HTML 动画先出关键帧总览给人确认，再逐帧渲染 + 配乐音效 |
 
 每个模块配一个 skill（`skills/`），告诉 Agent 什么时候用、怎么判断好坏；真正干活的都在 `studio/` 的脚本里，裸终端也能直接跑。
 
@@ -68,6 +69,7 @@ explainer-studio/                 ← 本仓库，只有代码、模板和 skill
 │   ├── avatar/                   竖屏口播：tools/*.py + engine/（Canvas 渲染引擎）
 │   ├── cut/                      录屏剪辑
 │   ├── refs/                     参考视频库
+│   ├── motion/                   文字动效短片：cli.py + template/（动画 HTML 模板 + motion.json）
 │   └── common/                   配置、密钥、fal / 百炼 / 视觉模型调用
 ├── skills/                       给 Agent 的判断规则（软链到 ~/.claude/skills、~/.codex/skills）
 ├── examples/                     专题示例
@@ -95,6 +97,31 @@ studio avatar qc out/my-topic.mp4 r1                  # Gemini 看片打分
 `examples/h3-five-parts/` 是一条完整的 2 分钟片（拆解开源视频生成模型 H3 的五个零件）的脚本和全部画面代码，
 可以当写法参考；录像、示意图和视频截帧素材不随仓库分发。`examples/minimal/` 是 `init` 生成的空骨架。
 
+## 做一条文字动效短片（无配音）
+
+适用：没有口播、只靠文字 + 动效 + 配乐的短片，比如宣传片、发布会风的功能介绍。要本人出镜讲解的走上面的口播流程。
+
+流程是**先给人看、确认了再渲染**，逐帧渲染慢，改一次分镜重渲一遍很浪费：
+
+1. **对齐分镜表**：每个镜头的时间段、画面、上屏文字，先和看片的人对齐。
+2. **写 HTML 动画**：`studio motion init <目录>` 复制模板。所有画面状态写成 `render(t)` 的纯函数，
+   时间点照分镜表填；页面暴露 `window.__seek(t)`，不带 `#seek` 打开时自动循环播放。
+3. **出预览**：`studio motion preview index.html --open` 生成关键帧总览图（每格标秒数），同时在浏览器循环播放，
+   两样一起给人看。改到满意为止，这一步不花渲染时间。
+4. **确认后渲染**：`studio motion render index.html -o out/成片.mp4`，逐帧截图 → x264 → 按 `motion.json`
+   的 `bgm` 和 `cues`（音效时间表）混音，临时片段渲完即删。
+
+```bash
+studio motion init <工作区>/projects/my-promo && cd <工作区>/projects/my-promo
+studio motion preview index.html --n 12 --open        # 或 --times 0.5,3,7.2；默认取 motion.json 的 preview
+studio motion render index.html --dur 2 -o /tmp/t.mp4  # 先渲 2 秒确认音画对齐
+studio motion render index.html -o out/promo.mp4 --size 720x1280 --fps 30
+```
+
+`motion.json` 和 HTML 放在一起（`<名字>.motion.json` 或同目录 `motion.json`），写时长、帧率、舞台尺寸、
+输出分辨率、配乐和音效时间表；音效素材目录在 `config.toml` 的 `[motion] sfx_dir` / `bgm_dir`，或用
+`--sfx-dir` / `--bgm-dir` 临时指定。音效素材不随仓库分发，用自己有授权的。
+
 ## 拆参考视频
 
 ```bash
@@ -113,6 +140,7 @@ studio refs report                # 按分组看语速、切镜频率、字幕�
 | [avatar-explainer-video](skills/avatar-explainer-video/SKILL.md) | 做竖屏口播讲解（本人小窗 + 信息图） |
 | [lecture-video-cut](skills/lecture-video-cut/SKILL.md) | 剪录屏讲课 |
 | [reference-study](skills/reference-study/SKILL.md) | 拆别的博主的视频 |
+| [motion-video](skills/motion-video/SKILL.md) | 做无配音的文字动效短片（宣传片、发布会风） |
 
 ```bash
 for s in skills/*/; do ln -s "$PWD/$s" ~/.claude/skills/; ln -s "$PWD/$s" ~/.codex/skills/; done

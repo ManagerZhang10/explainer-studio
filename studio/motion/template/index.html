@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>motion 模板</title>
+<!--
+  文字动效短视频模板。约定（studio motion 依赖这三条）：
+    1. 画面全部画在 #stage 里，尺寸 = motion.json 的 width × height；
+    2. 所有画面状态都是 render(t) 的纯函数：同一个 t 永远画出同一帧，不读真实时间、不靠 CSS transition / animation；
+    3. 暴露 window.__seek(t)。URL 不带 #seek 时自动循环播放（浏览器预览），带 #seek 时只响应 __seek（逐帧渲染）。
+  字体只用本机已有字体或随文件放的本地字体，不联网加载。
+-->
+<style>
+:root{--bg:#000;--fg:#F5F5F7;--grey:#86868B;--acc:#FF9F0A;--cn:"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif;--mono:Menlo,monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#000;overflow:hidden}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--cn);transform-origin:0 0}
+.abs{position:absolute}.c{left:0;right:0;text-align:center}
+.title{font-size:150px;font-weight:700;letter-spacing:-3px}
+.sub{font-size:56px;color:var(--grey)}
+.acc{color:var(--acc)}
+</style></head><body>
+<div id="stage">
+  <!-- 镜头 1：标题 -->
+  <div id="s1">
+    <div class="abs c sub" id="kicker" style="top:640px">一句话讲清这条片子</div>
+    <div class="abs c title" id="title" style="top:760px">大标题</div>
+  </div>
+  <!-- 镜头 2：逐字打出 -->
+  <div id="s2" style="visibility:hidden">
+    <div class="abs c sub" style="top:700px">第二个镜头</div>
+    <div class="abs c title acc" id="typed" style="top:820px"></div>
+  </div>
+</div>
+<script>
+const DUR = 6;                 // 和 motion.json 的 duration 保持一致：预览按它循环
+const $ = id => document.getElementById(id);
+
+// ---------- helpers：插值和缓动 ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const L = (a, b, p) => a + (b - a) * p;                       // 线性插值
+const ease = {
+  linear: x => x,
+  outCubic: x => 1 - Math.pow(1 - x, 3),
+  inOutCubic: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  outBack: x => { const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); },
+  outExpo: x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x),
+};
+// t 在 [a, b] 之间的进度 0→1，再过一遍缓动
+const P = (t, a, b, e = ease.outCubic) => e(clamp((t - a) / (b - a)));
+// 淡入 + 位移；p = 0 不可见，p = 1 到位
+const show = (el, p, dy = 0, dx = 0, s = 1) => {
+  el.style.opacity = p; el.style.visibility = p > 0.001 ? 'visible' : 'hidden';
+  el.style.transform = `translate(${dx}px,${dy}px) scale(${s})`;
+};
+// 逐字打出：从 a 秒开始，每秒 cps 个字
+const type = (el, text, t, a, cps = 18) => { el.textContent = text.slice(0, Math.floor(clamp((t - a) * cps, 0, text.length))); };
+// 镜头区间：在 [a, b) 内可见，两端各 fade 秒淡入淡出
+const scene = (el, t, a, b, fade = .35) => {
+  const p = P(t, a, a + fade) * (1 - P(t, b - fade, b));
+  el.style.opacity = p; el.style.visibility = p > 0.001 ? 'visible' : 'hidden'; return p;
+};
+
+// ---------- 分镜：时间点和分镜表一一对应 ----------
+function render(t) {
+  // 0–3s 标题
+  scene($('s1'), t, 0, 3.0);
+  show($('kicker'), P(t, 0.2, 0.7), 30 * (1 - P(t, 0.2, 0.7)));
+  const tp = P(t, 0.5, 1.1, ease.outBack); show($('title'), clamp(tp * 2), 0, 0, L(0.8, 1, tp));
+  // 3–6s 逐字打出
+  scene($('s2'), t, 3.0, DUR + 1);
+  type($('typed'), '把一件事讲清楚', t, 3.4, 10);
+}
+
+window.__seek = t => render(t);
+render(0);
+if (!location.hash.includes('seek')) {        // 浏览器预览：缩放到窗口，循环播放
+  const fit = () => { const s = Math.min(innerWidth / 1080, innerHeight / 1920); $('stage').style.transform = `scale(${s})`; };
+  fit(); addEventListener('resize', fit);
+  const t0 = performance.now();
+  const loop = () => { render(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); };
+  loop();
+}
+</script>
+</body></html>
