@@ -36,6 +36,7 @@ case "$area" in
     esac ;;
   cut) exec "$py" "$repo/studio/cut/lecture_cut.py" "$@" ;;
   refs) exec "$py" "$repo/studio/refs/cli.py" "$@" ;;
+  motion) exec "$py" "$repo/studio/motion/cli.py" "$@" ;;
   *)
     cat <<'H'
 studio <模块> <命令>     中文技术讲解视频工具箱
@@ -43,6 +44,7 @@ studio <模块> <命令>     中文技术讲解视频工具箱
   avatar …                 竖屏口播：克隆声音 + 对口型小窗 + 逐帧信息图（studio avatar help）
   cut …                    录屏剪辑：去气口、删卡壳、逐字字幕、圆形摄像头（studio cut --help）
   refs …                   参考视频：抓取博主视频、转写、拆解制作手法（studio refs --help）
+  motion …                 文字动效短视频：HTML 动画先出关键帧总览预览，确认后逐帧渲染 + 混音（studio motion --help）
 H
     ;;
 esac

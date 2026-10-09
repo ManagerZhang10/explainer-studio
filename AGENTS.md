@@ -33,6 +33,7 @@ Git 身份只用个人 noreply 邮箱，仓库级配置，不加 `--global`。
 | --- | --- |
 | `studio/avatar/` | 在一个已有专题目录 `studio avatar stills <秒…>`，看静帧 |
 | `studio/refs/` | `studio refs report` |
+| `studio/motion/` | `studio motion init` 一个临时目录，`preview` 出总览图，`render --dur 1` 出片 |
 | `studio/common/config.py` | `studio setup` |
 
 ## 四、对外动作停点

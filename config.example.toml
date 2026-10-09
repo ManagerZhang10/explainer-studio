@@ -37,6 +37,12 @@ music = "none"
 ffmpeg = ""                 # 留空则用 PATH 里的 ffmpeg
 mlx_whisper = "mlx_whisper"
 
+[motion]
+# studio motion render 的音效 / 配乐素材目录。motion.json 里 cues[].file、bgm.file 写相对这里的路径
+# （也可以写相对 motion.json 的路径或绝对路径；命令行 --sfx-dir / --bgm-dir 优先）
+sfx_dir = ""                # 例如 "~/sfx"，里面放 keyboard/type.mp3、transition/whoosh.mp3 …
+bgm_dir = ""                # 留空则同 sfx_dir
+
 [me]
 # 新建口播专题时自动填进 topic.json 的默认值
 camera_video = ""           # 本人口播录像（做对口型驱动底片）
